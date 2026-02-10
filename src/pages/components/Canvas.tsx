@@ -58,7 +58,7 @@ const Canvas: React.FC = () => {
                 })
             }
         });
-    }, [team],
+    }, [team, onImageLoad, onImageError],
     );
     const [circle, setCircle] = useState(users);
 
