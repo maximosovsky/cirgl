@@ -7,17 +7,17 @@ import { Stage, Layer, Group, Circle, Rect, Image, Text } from 'react-konva';
 import { ITeam, IUsers } from '../../types/types';
 
 const Canvas: React.FC = () => {
-    const [ team ] = useState<ITeam[]>(JSON.parse(localStorage.getItem('team') as string) ?? []);
+    const [team] = useState<ITeam[]>(JSON.parse(localStorage.getItem('team') as string) ?? []);
     const [checkedName, setCheckedName] = useState<boolean>(true);
 
     const users = useMemo(() => {
-        team.sort(function(a, b){
+        team.sort(function (a, b) {
             return b.salary - a.salary;
         });
-        return team.map((item: ITeam, index: number) => { 
-            const radius = Math.sqrt((item.salary)/3.14);
+        return team.map((item: ITeam, index: number) => {
+            const radius = Math.sqrt((item.salary) / 3.14);
             const x = ((window.innerWidth * 0.83) / team.length) * (index + 1) - (window.innerWidth * 0.83) / team.length / 2;
-            const y  = Math.random() * (window.innerHeight*0.7 - radius - radius) + radius;
+            const y = Math.random() * (window.innerHeight * 0.7 - radius - radius) + radius;
             return {
                 id: item.id,
                 x: x,
@@ -27,24 +27,26 @@ const Canvas: React.FC = () => {
                 isDragging: false,
                 radius: radius,
                 color: colors[index] ?? colors[Math.floor(Math.random() * (colors.length - 1))],
-                team: item.team.map((value: IUsers) => { 
-                    const radiusValue = Math.sqrt((value.salary)/3.14);   
-                    let img = new window.Image();    
-                    img.src = value.avatar;       
+                team: item.team.map((value: IUsers) => {
+                    const radiusValue = Math.sqrt((value.salary) / 3.14);
+                    let img = new window.Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onerror = () => { img.src = ''; };
+                    img.src = value.avatar;
                     return {
                         userName: value.userName,
                         id: value.id,
                         idTeam: item.id,
                         x: item.team.length === 1 ? x - radius + 10 : Math.random() * (x - (x - radius + 10)) + (x - radius + 10),
-                        y: item.team.length === 1 ? y - radius + 10  : Math.random() * (y - (y - radius + 10)) + (y - radius + 10),
-                        radius: radiusValue*0.6, // радиус вычеслен на основании площади круга = зарплате
+                        y: item.team.length === 1 ? y - radius + 10 : Math.random() * (y - (y - radius + 10)) + (y - radius + 10),
+                        radius: radiusValue * 0.6, // радиус вычеслен на основании площади круга = зарплате
                         image: img,
                         avatar: value.avatar,
                     }
                 })
             }
         });
-        }, [team],
+    }, [team],
     );
     const [circle, setCircle] = useState(users);
 
@@ -52,36 +54,36 @@ const Canvas: React.FC = () => {
         const id = e.target.id();
         setCircle(
             circle.map((circle) => {
-            return {
-              ...circle,
-              isDragging: circle.id as unknown as string === id
-            };
-          })
-        );
-      });
-
-    const handleDragEndTeam = useEventCallback((e: KonvaEventObject<DragEvent>) => { 
-        setCircle(
-            circle.map((circle: any) => {
-            return {
-              ...circle,
-              isDragging: false
-            };
-          })
+                return {
+                    ...circle,
+                    isDragging: circle.id as unknown as string === id
+                };
+            })
         );
     });
-    
+
+    const handleDragEndTeam = useEventCallback((e: KonvaEventObject<DragEvent>) => {
+        setCircle(
+            circle.map((circle: any) => {
+                return {
+                    ...circle,
+                    isDragging: false
+                };
+            })
+        );
+    });
+
     const handleDragStart = useEventCallback((e: KonvaEventObject<DragEvent>) => {
         const id = e.target.id();
         setCircle(
             circle.map((circle) => {
-            return {
-              ...circle,
-              isDragging: circle.id as unknown as string === id
-            };
-          })
+                return {
+                    ...circle,
+                    isDragging: circle.id as unknown as string === id
+                };
+            })
         );
-      });
+    });
 
     const handleDragEnd = useEventCallback((e: KonvaEventObject<DragEvent>, id?: number | undefined, idTeam?: number | undefined) => {
         const currentTeam = users.filter((item) => item.id === idTeam);
@@ -91,15 +93,15 @@ const Canvas: React.FC = () => {
         if (e.evt.offsetX < currentTeam[0].x + currentTeam[0].radius && e.evt.offsetX > currentTeam[0].x - currentTeam[0].radius && e.evt.offsetY < currentTeam[0].y + currentTeam[0].radius && e.evt.offsetY > currentTeam[0].y - currentTeam[0].radius) {
             setCircle(
                 circle.map((circle: any) => {
-                return {
-                  ...circle,
-                  isDragging: false
-                };
-              })
+                    return {
+                        ...circle,
+                        isDragging: false
+                    };
+                })
             );
         } else {
             const teamLS = JSON.parse(localStorage.getItem('team') as string) ?? [];
-            const result = teamLS?.map((item: ITeam) => { 
+            const result = teamLS?.map((item: ITeam) => {
                 if (idTeam === item.id) {
                     const resultTeam = item?.team?.filter((value: IUsers) => value.id !== id);
                     const removeUser = item?.team?.filter((value: IUsers) => value.id === id);
@@ -115,7 +117,8 @@ const Canvas: React.FC = () => {
                             salary: salary?.reduce((partialSum, a) => partialSum + a, 0),
                             team: resultTeam,
                         };
-                    };
+                    }
+                    return undefined;
                 } else {
                     return item;
                 }
@@ -123,7 +126,7 @@ const Canvas: React.FC = () => {
             localStorage.setItem('team', JSON.stringify(result.filter((item: ITeam) => item)));
             if (newTeam.length) {
                 onClick(newTeam[0].id);
-            } else { 
+            } else {
                 localStorage.setItem('user', JSON.stringify([]));
                 window.location.reload();
             }
@@ -133,11 +136,11 @@ const Canvas: React.FC = () => {
     const onClick = useEventCallback((teamId: number) => {
         const team = JSON.parse(localStorage.getItem('team') as string) ?? [];
         const user = JSON.parse(localStorage.getItem('user') as string)[0];
-        const result = team.map((item: ITeam) => { 
+        const result = team.map((item: ITeam) => {
             if (item.id === teamId) {
                 const resultTeam = [...item.team, user];
                 return {
-                    department: item.department, 
+                    department: item.department,
                     id: item.id,
                     salary: item.salary + user.salary,
                     team: resultTeam,
@@ -163,36 +166,38 @@ const Canvas: React.FC = () => {
                     onClick(team[0].id);
                 }
             }}
-            onDragOver={(e) =>{
+            onDragOver={(e) => {
                 e.preventDefault();
             }}
         >
             <FormGroup style={{ width: window.innerWidth * 0.83, marginInline: 0 }}>
                 <Typography variant="caption" display="block" gutterBottom style={{ margin: 15, display: 'flex', justifyContent: 'space-between' }}>
-                    <div style={{ fontSize: '18px' }}><span style={{ fontWeight: 'bold'}}>Проект: №1</span>, количество команд: {team.length}</div>
-                    {team.length ? (<FormControlLabel 
-                        control={<Checkbox onChange={(event) => setCheckedName(event.target.checked)} checked={checkedName}/>} 
-                        label="Показать ФИО" 
+                    <div style={{ fontSize: '18px' }}><span style={{ fontWeight: 'bold' }}>Проект: №1</span>, количество команд: {team.length}</div>
+                    {team.length ? (<FormControlLabel
+                        control={<Checkbox onChange={(event) => setCheckedName(event.target.checked)} checked={checkedName} />}
+                        label="Показать ФИО"
                     />) : null}
                 </Typography>
             </FormGroup>
-            <Stage width={window.innerWidth * 0.83} height={window.innerHeight-72}>
+            <Stage width={window.innerWidth * 0.83} height={window.innerHeight - 72}>
                 <Layer>
                     {users.map((item) => (
                         <Group
+                            key={`team-${item.id}`}
                             draggable
                             onDragStart={(event) => handleDragStartTeam(event)}
                             onDragEnd={(event) => handleDragEndTeam(event)}
                         >
                             <Circle
                                 key={item.id}
-                                id={item.id as unknown as string}
+                                id={String(item.id)}
                                 x={item.x}
                                 y={item.y}
                                 radius={item.radius}
                                 fill={item.color as string} />
                             {item.team.map((value) => (
                                 <Group
+                                    key={`user-${value.id}`}
                                     draggable
                                     onDragStart={(event) => handleDragStart(event)}
                                     onDragEnd={(event) => handleDragEnd(event, value.id, value.idTeam)}
@@ -201,12 +206,12 @@ const Canvas: React.FC = () => {
                                         cornerRadius={360}
                                         image={value.image}
                                         key={value.id}
-                                        id={value.id as unknown as string}
+                                        id={String(value.id)}
                                         x={value.x}
                                         y={value.y}
-                                        width={value.radius*2}
-                                        height={value.radius*2}
-                                        scale={{x: 1, y: 1}}
+                                        width={value.radius * 2}
+                                        height={value.radius * 2}
+                                        scale={{ x: 1, y: 1 }}
                                         stroke='#FFFFFF' />
                                     {checkedName ? (
                                         <>
@@ -217,7 +222,7 @@ const Canvas: React.FC = () => {
                                                 height={24}
                                                 stroke={item.color}
                                                 align='center'
-                                                fill='#FFFFFF' 
+                                                fill='#FFFFFF'
                                             />
                                             <Text
                                                 x={value.x + value.radius / 2}
@@ -225,10 +230,10 @@ const Canvas: React.FC = () => {
                                                 text={`${value.userName}`}
                                                 fontSize={14}
                                                 width={`${value.userName}`.length * 12}
-                                                align='center' 
+                                                align='center'
                                             />
                                         </>)
-                                    : null}
+                                        : null}
                                 </Group>
                             ))}
                             <Rect

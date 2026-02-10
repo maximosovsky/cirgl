@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { List, ListItem, ListItemAvatar, ListItemText, Avatar, ListItemButton, Typography, FormControl, Divider, Grid, InputBase, IconButton, Paper, Fab, Dialog, DialogTitle, DialogContent, Tooltip } from '@mui/material';
+import { List, ListItem, ListItemAvatar, ListItemText, Avatar, ListItemButton, Typography, FormControl, Divider, Grid, InputBase, IconButton, Paper, Dialog, DialogTitle, DialogContent } from '@mui/material';
 import 'primeicons/primeicons.css';
 import SearchIcon from "@mui/icons-material/Search";
 import AddSharpIcon from '@mui/icons-material/AddSharp';
@@ -18,7 +18,7 @@ const ListUsers: React.FC = () => {
     const handleClickOpenDialog = useCallback(() => {
         setOpenDialog(true);
     }, []);
-    
+
     const handleCloseDialog = useCallback(() => {
         setOpenDialog(false);
         window.location.reload();
@@ -58,7 +58,7 @@ const ListUsers: React.FC = () => {
             }
         };
         fileReader.readAsBinaryString(files[0]);
-    }, [ handleCloseDialog ]);
+    }, [handleCloseDialog]);
 
     //методы добавления пользователей в команды
     const onCheckedUser = useCallback((index: number) => {
@@ -67,26 +67,26 @@ const ListUsers: React.FC = () => {
         newChecked.push(chechedUser as number);
         setChecked(newChecked);
         localStorage.setItem('user', JSON.stringify(importUsers.filter((item) => item.id === index)));
-    }, [ checked, importUsers ]);
+    }, [checked, importUsers]);
 
     const onAddTeam = useCallback(() => {
         const chechedUser = importUsers.filter((item) => checked.includes(item.id));
         const salary = chechedUser.map(item => item.salary);
         const team = JSON.parse(localStorage.getItem('team') as string) ?? [];
         const result = {
-            department: department, 
+            department: department,
             id: team.length,
             salary: salary?.reduce((partialSum, a) => partialSum + a, 0),
             team: chechedUser,
         };
-        localStorage.setItem('team', JSON.stringify([ ...team, result]));
+        localStorage.setItem('team', JSON.stringify([...team, result]));
         const resultUsers = users.filter((item: IUsers) => !checked.includes(item.id));
         localStorage.setItem('users', JSON.stringify(resultUsers));
         localStorage.setItem('user', JSON.stringify([]));
         setDepartment('');
         setChecked([]);
         window.location.reload();
-    }, [ checked, department, importUsers, users ]);
+    }, [checked, department, importUsers, users]);
 
     const onSearch = useCallback((value: string) => {
         if (value) {
@@ -95,12 +95,12 @@ const ListUsers: React.FC = () => {
         } else {
             setUsers(JSON.parse(localStorage.getItem('users') as string) ?? []);
         }
-    }, [ users ]);
+    }, [users]);
 
     return (
         <>
             <Typography variant="caption" display="block" gutterBottom style={{ marginTop: 15, display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontWeight: 'bold', fontSize: '18px', marginLeft: 25 }}>Контакты<IconButton sx={{ p: '0px', ml: '10px' }} 
+                <span style={{ fontWeight: 'bold', fontSize: '18px', marginLeft: 25 }}>Контакты<IconButton sx={{ p: '0px', ml: '10px' }}
                     onClick={handleClickOpenDialog}
                 ><FileUploadIcon /></IconButton></span>
                 <span style={{ marginRight: 25, paddingBlock: 5 }}>{users.length} </span>
@@ -110,7 +110,7 @@ const ListUsers: React.FC = () => {
                     component="form"
                     variant='outlined'
                     sx={{ display: 'flex', alignItems: 'center', size: 'small' }}
-                    >
+                >
                     <IconButton sx={{ p: '10px' }}>
                         <SearchIcon />
                     </IconButton>
@@ -121,41 +121,40 @@ const ListUsers: React.FC = () => {
                             onSearch(event.target.value);
                         }}
                     />
-                </Paper> 
+                </Paper>
             </FormControl>
-            <List dense sx={{ width: '100%', bgcolor: 'background.paper', position: 'relative', overflow: 'auto', height: window.innerHeight*0.76 }}>
+            <List dense sx={{ width: '100%', bgcolor: 'background.paper', position: 'relative', overflow: 'auto', height: window.innerHeight * 0.76 }}>
                 {users?.map((item: IUsers) => {
                     return (
-                        <>
-                        <ListItemButton
-                            selected={checked.includes(item.id)}
-                            onClick={() => onCheckedUser(item.id)}
-                        >
-                            <ListItem
-                                alignItems="flex-start"
-                                key={item.id}
-                                style={{ paddingInline: 15 }}
-                                disablePadding
+                        <React.Fragment key={item.id}>
+                            <ListItemButton
+                                selected={checked.includes(item.id)}
+                                onClick={() => onCheckedUser(item.id)}
                             >
-                                <Grid container wrap="nowrap" spacing={2}>
-                                    <Grid item>
-                                        <ListItemAvatar>
-                                            <Avatar variant="rounded" src={item.avatar} draggable="true" onDragStart={() => {
+                                <ListItem
+                                    alignItems="flex-start"
+                                    style={{ paddingInline: 15 }}
+                                    disablePadding
+                                >
+                                    <Grid container wrap="nowrap" spacing={2}>
+                                        <Grid item>
+                                            <ListItemAvatar>
+                                                <Avatar variant="rounded" src={item.avatar} draggable="true" onDragStart={() => {
                                                     localStorage.setItem('user', JSON.stringify(importUsers.filter((value) => value.id === item.id)));
                                                 }}>{item.id}</Avatar>
-                                        </ListItemAvatar>
+                                            </ListItemAvatar>
+                                        </Grid>
+                                        <Grid item xs>
+                                            <ListItemText
+                                                primary={item.userName}
+                                                secondary={`${item.department ?? 'Позиция не указана'}, ${item.salary ?? 'заработная плата не указана'}`}
+                                            />
+                                        </Grid>
                                     </Grid>
-                                    <Grid item xs>
-                                        <ListItemText
-                                            primary={item.userName}
-                                            secondary={`${item.department ?? 'Позиция не указана'}, ${item.salary ?? 'заработная плата не указана'}`} 
-                                        />
-                                    </Grid>
-                                </Grid>        
-                            </ListItem>
-                        </ListItemButton>
-                        <Divider variant="inset" component="li" />
-                    </>
+                                </ListItem>
+                            </ListItemButton>
+                            <Divider variant="inset" component="li" />
+                        </React.Fragment>
                     );
                 })}
             </List>
@@ -164,14 +163,13 @@ const ListUsers: React.FC = () => {
                     component="form"
                     variant='outlined'
                     sx={{ display: 'flex', alignItems: 'center', size: 'small' }}
-                    >
-                    <IconButton onClick={() => {
+                >
+                    <IconButton color="primary" onClick={() => {
                         if (department && checked.length) {
                             onAddTeam();
-                        }}}>
-                        <Fab color="primary" aria-label="add" size="small">
-                            <AddSharpIcon />
-                        </Fab>
+                        }
+                    }}>
+                        <AddSharpIcon />
                     </IconButton>
                     <InputBase
                         value={department}
@@ -191,7 +189,7 @@ const ListUsers: React.FC = () => {
                     Загрузить список сотрудников
                 </DialogTitle>
                 <DialogContent>
-                    <input type='file' accept='.xlsx'  onChange={onImportExcel} />
+                    <input type='file' accept='.xlsx' onChange={onImportExcel} />
                 </DialogContent>
             </Dialog>
         </>
