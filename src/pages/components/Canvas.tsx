@@ -1,14 +1,23 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { Checkbox, FormControlLabel, FormGroup, Typography, useEventCallback } from '@mui/material';
 import { colors } from '../../mock/mock';
 import 'primeicons/primeicons.css';
 import { KonvaEventObject } from 'konva/lib/Node';
-import { Stage, Layer, Group, Circle, Rect, Image, Text } from 'react-konva';
+import { Stage, Layer, Group, Circle as KonvaCircle, Rect, Image, Text } from 'react-konva';
 import { ITeam, IUsers } from '../../types/types';
 
 const Canvas: React.FC = () => {
     const [team] = useState<ITeam[]>(JSON.parse(localStorage.getItem('team') as string) ?? []);
     const [checkedName, setCheckedName] = useState<boolean>(true);
+    const [imageLoaded, setImageLoaded] = useState<Record<number, boolean>>({});
+
+    const onImageLoad = useCallback((id: number) => {
+        setImageLoaded(prev => ({ ...prev, [id]: true }));
+    }, []);
+
+    const onImageError = useCallback((id: number) => {
+        setImageLoaded(prev => ({ ...prev, [id]: false }));
+    }, []);
 
     const users = useMemo(() => {
         team.sort(function (a, b) {
@@ -31,8 +40,11 @@ const Canvas: React.FC = () => {
                     const radiusValue = Math.sqrt((value.salary) / 3.14);
                     let img = new window.Image();
                     img.crossOrigin = 'anonymous';
-                    img.onerror = () => { img.src = ''; };
-                    img.src = value.avatar;
+                    img.onload = () => onImageLoad(value.id);
+                    img.onerror = () => onImageError(value.id);
+                    if (value.avatar) {
+                        img.src = value.avatar;
+                    }
                     return {
                         userName: value.userName,
                         id: value.id,
@@ -188,7 +200,7 @@ const Canvas: React.FC = () => {
                             onDragStart={(event) => handleDragStartTeam(event)}
                             onDragEnd={(event) => handleDragEndTeam(event)}
                         >
-                            <Circle
+                            <KonvaCircle
                                 key={item.id}
                                 id={String(item.id)}
                                 x={item.x}
@@ -202,17 +214,28 @@ const Canvas: React.FC = () => {
                                     onDragStart={(event) => handleDragStart(event)}
                                     onDragEnd={(event) => handleDragEnd(event, value.id, value.idTeam)}
                                 >
-                                    <Image
-                                        cornerRadius={360}
-                                        image={value.image}
-                                        key={value.id}
-                                        id={String(value.id)}
-                                        x={value.x}
-                                        y={value.y}
-                                        width={value.radius * 2}
-                                        height={value.radius * 2}
-                                        scale={{ x: 1, y: 1 }}
-                                        stroke='#FFFFFF' />
+                                    {imageLoaded[value.id] ? (
+                                        <Image
+                                            cornerRadius={360}
+                                            image={value.image}
+                                            key={value.id}
+                                            id={String(value.id)}
+                                            x={value.x}
+                                            y={value.y}
+                                            width={value.radius * 2}
+                                            height={value.radius * 2}
+                                            scale={{ x: 1, y: 1 }}
+                                            stroke='#FFFFFF' />
+                                    ) : (
+                                        <KonvaCircle
+                                            key={value.id}
+                                            id={String(value.id)}
+                                            x={value.x + value.radius}
+                                            y={value.y + value.radius}
+                                            radius={value.radius}
+                                            fill='#CCCCCC'
+                                            stroke='#FFFFFF' />
+                                    )}
                                     {checkedName ? (
                                         <>
                                             <Rect
